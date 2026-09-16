@@ -46,6 +46,8 @@ jobs:
       - name: Build frontend
         run: npm run build
         working-directory: frontend/society-web
+        env:
+          CI: false
 
   deploy:
     name: Deploy to Azure
@@ -88,6 +90,8 @@ jobs:
       - name: Build Frontend
         run: npm run build
         working-directory: frontend/society-web
+        env:
+          CI: false
 
       - name: Deploy Frontend to Azure Web App
         uses: azure/webapps-deploy@v3
