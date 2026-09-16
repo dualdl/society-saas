@@ -54,7 +54,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    environment: production
     
     steps:
       - name: Checkout code
@@ -70,6 +69,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Build and Publish API
         run: |
           dotnet publish backend/SocietySaaS.API/SocietySaaS.API.csproj \
@@ -80,7 +86,6 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: society-saas-api
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
           package: ${{ github.workspace }}/api-output
 
       - name: Install Frontend Dependencies
@@ -97,5 +102,8 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: society-saas-web
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB }}
           package: frontend/society-web/build
+
+      - name: Logout from Azure
+        run: az logout
+        if: always()
