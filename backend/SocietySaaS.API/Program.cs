@@ -87,12 +87,14 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.EnsureCreatedAsync();
-
-    // Seed super admin
-    if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
+    try
     {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.EnsureCreatedAsync();
+
+        // Seed super admin
+        if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
+        {
         var superAdmin = new User
         {
             Id = Guid.NewGuid(),
@@ -231,6 +233,11 @@ using (var scope = app.Services.CreateScope())
 
         await db.SaveChangesAsync();
         Log.Information("Database seeded successfully. SuperAdmin: superadmin@societypro.com / SuperAdmin@123");
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred during database seeding");
     }
 }
 

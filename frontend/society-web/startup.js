@@ -20,7 +20,7 @@ const MIME_TYPES = {
 };
 
 const PORT = process.env.PORT || 8080;
-const BUILD_DIR = path.join(__dirname, 'build');
+const BUILD_DIR = __dirname;
 
 const server = http.createServer((req, res) => {
   let filePath = path.join(BUILD_DIR, req.url === '/' ? 'index.html' : req.url);
