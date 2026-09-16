@@ -54,6 +54,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
       - name: Checkout code
