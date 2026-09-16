@@ -1,0 +1,14 @@
+name: society-saas
+metadata:
+  template: society-saas
+
+services:
+  api:
+    project: backend/SocietySaaS.API
+    language: csharp
+    host: appservice
+
+  web:
+    project: frontend/society-web
+    language: javascript
+    host: appservice
