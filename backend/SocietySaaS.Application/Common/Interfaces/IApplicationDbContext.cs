@@ -5,45 +5,45 @@ namespace SocietySaaS.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
-    DbSet<Tenant> Tenants { get; set; }
+    DbSet<Tenant> Tenants { get; }
     
-    DbSet<User> Users { get; set; }
+    DbSet<User> Users { get; }
     
-    DbSet<UserTenant> UserTenants { get; set; }
+    DbSet<UserTenant> UserTenants { get; }
     
-    DbSet<Wing> Wings { get; set; }
+    DbSet<Wing> Wings { get; }
     
-    DbSet<Flat> Flats { get; set; }
+    DbSet<Flat> Flats { get; }
     
-    DbSet<Member> Members { get; set; }
+    DbSet<Member> Members { get; }
     
-    DbSet<Charge> Charges { get; set; }
+    DbSet<Charge> Charges { get; }
     
-    DbSet<Bill> Bills { get; set; }
+    DbSet<Bill> Bills { get; }
     
-    DbSet<BillLine> BillLines { get; set; }
+    DbSet<BillLine> BillLines { get; }
     
-    DbSet<Payment> Payments { get; set; }
+    DbSet<Payment> Payments { get; }
     
-    DbSet<PaymentAllocation> PaymentAllocations { get; set; }
+    DbSet<PaymentAllocation> PaymentAllocations { get; }
     
-    DbSet<Receipt> Receipts { get; set; }
+    DbSet<Receipt> Receipts { get; }
     
-    DbSet<OpeningBalance> OpeningBalances { get; set; }
+    DbSet<OpeningBalance> OpeningBalances { get; }
     
-    DbSet<AuditLog> AuditLogs { get; set; }
+    DbSet<AuditLog> AuditLogs { get; }
     
-    DbSet<EmailTemplate> EmailTemplates { get; set; }
+    DbSet<EmailTemplate> EmailTemplates { get; }
     
-    DbSet<EmailQueue> EmailQueue { get; set; }
+    DbSet<EmailQueue> EmailQueue { get; }
     
-    DbSet<ImportJob> ImportJobs { get; set; }
+    DbSet<ImportJob> ImportJobs { get; }
     
-    DbSet<ImportRow> ImportRows { get; set; }
+    DbSet<ImportRow> ImportRows { get; }
     
-    DbSet<Document> Documents { get; set; }
+    DbSet<Document> Documents { get; }
     
-    DbSet<LatePaymentRule> LatePaymentRules { get; set; }
+    DbSet<LatePaymentRule> LatePaymentRules { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

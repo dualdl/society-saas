@@ -411,3 +411,12 @@ frontend/society-web/.env.production.local
 *.tfvars
 .terraform/
 .terraform.lock.hcl
+
+# Deploy temp files
+*.zip
+api_profile*
+web_profile*
+api_publish*
+web_publish*
+password.txt
+username.txt

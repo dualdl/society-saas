@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Application.Common.Interfaces;
+using SocietySaaS.Domain.Common;
 using SocietySaaS.Domain.Entities;
 
 namespace SocietySaaS.Infrastructure.Persistence;
@@ -61,7 +62,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var entry in ChangeTracker.Entries<Common.BaseEntity>())
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
             switch (entry.State)
             {

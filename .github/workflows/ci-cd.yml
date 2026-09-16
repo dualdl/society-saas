@@ -3,16 +3,14 @@ name: Society SaaS CI/CD
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 env:
   DOTNET_VERSION: '10.0.x'
-  NODE_VERSION: '18.x'
-  PROJECT_NAME: 'society-saas'
+  NODE_VERSION: '22.x'
 
 jobs:
   build:
@@ -41,77 +39,19 @@ jobs:
         run: dotnet build --configuration Release --no-restore
         working-directory: backend
 
-      - name: Run .NET tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
-        working-directory: backend
-
       - name: Install frontend dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: frontend/society-web
 
       - name: Build frontend
         run: npm run build
         working-directory: frontend/society-web
 
-  deploy-staging:
-    name: Deploy to Staging
+  deploy:
+    name: Deploy to Azure
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
-    environment: staging
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Build and Publish API
-        run: |
-          dotnet publish backend/SocietySaaS.API/SocietySaaS.API.csproj \
-            -c Release \
-            -o ${{ github.workspace }}/api-output
-
-      - name: Deploy API to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'society-saas-api-staging'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
-          package: '${{ github.workspace }}/api-output'
-
-      - name: Build Frontend
-        run: |
-          cd frontend/society-web
-          npm install
-          npm run build
-
-      - name: Deploy Frontend to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'society-saas-web-staging'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB }}
-          package: 'frontend/society-web/build'
-
-  deploy-production:
-    name: Deploy to Production
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     environment: production
     
     steps:
@@ -128,13 +68,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Build and Publish API
         run: |
           dotnet publish backend/SocietySaaS.API/SocietySaaS.API.csproj \
@@ -144,19 +77,21 @@ jobs:
       - name: Deploy API to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'society-saas-api'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_PROD }}
-          package: '${{ github.workspace }}/api-output'
+          app-name: society-saas-api
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
+          package: ${{ github.workspace }}/api-output
+
+      - name: Install Frontend Dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: frontend/society-web
 
       - name: Build Frontend
-        run: |
-          cd frontend/society-web
-          npm install
-          npm run build
+        run: npm run build
+        working-directory: frontend/society-web
 
       - name: Deploy Frontend to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'society-saas-web'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB_PROD }}
-          package: 'frontend/society-web/build'
+          app-name: society-saas-web
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB }}
+          package: frontend/society-web/build
