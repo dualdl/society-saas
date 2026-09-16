@@ -96,6 +96,12 @@ jobs:
         env:
           CI: false
 
+      - name: Prepare Frontend for Deployment
+        run: |
+          cp frontend/society-web/startup.js frontend/society-web/build/startup.js
+          cp frontend/society-web/web.config frontend/society-web/build/web.config
+          echo '{"name":"society-web","version":"1.0.0","private":true,"scripts":{"start":"node startup.js"},"engines":{"node":">=18.0.0"}}' > frontend/society-web/build/package.json
+
       - name: Deploy Frontend to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
