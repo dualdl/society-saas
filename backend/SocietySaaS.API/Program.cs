@@ -107,38 +107,52 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var hasMigrationsHistory = await db.Database.SqlQueryRaw<int>(
-            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '__EFMigrationsHistory'").ToListAsync();
+        Log.Information("Checking database state...");
+        var canConnect = await db.Database.CanConnectAsync();
+        Log.Information("Can connect to database: {CanConnect}", canConnect);
 
-        if (hasMigrationsHistory.FirstOrDefault() == 0)
+        if (!canConnect)
         {
-            Log.Information("No migration history found. Recreating database...");
-            await db.Database.EnsureDeletedAsync();
-            await db.Database.MigrateAsync();
-            Log.Information("Database recreated and migrated.");
+            Log.Error("Cannot connect to database. Skipping initialization.");
         }
         else
         {
-            Log.Information("Applying pending migrations...");
-            await db.Database.MigrateAsync();
-            Log.Information("Migrations applied successfully.");
-        }
+            bool needsInit = false;
+            try
+            {
+                await db.Users.AnyAsync();
+                Log.Information("Users table exists and is accessible.");
+            }
+            catch
+            {
+                needsInit = true;
+                Log.Information("Users table not found or inaccessible. Will recreate database.");
+            }
 
-        if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
-        {
-            Log.Information("Seeding database...");
-            await SeedData.SeedAsync(db);
-            Log.Information("Database seeded successfully.");
-        }
-        else
-        {
-            Log.Information("Database already seeded.");
+            if (needsInit)
+            {
+                Log.Information("Recreating database from scratch...");
+                await db.Database.EnsureDeletedAsync();
+                await db.Database.EnsureCreatedAsync();
+                Log.Information("Database created successfully.");
+            }
+
+            if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
+            {
+                Log.Information("Seeding database...");
+                await SeedData.SeedAsync(db);
+                Log.Information("Database seeded successfully.");
+            }
+            else
+            {
+                Log.Information("Database already seeded.");
+            }
         }
     }
 }
 catch (Exception ex)
 {
-    Log.Error(ex, "Failed to apply migrations or seed database");
+    Log.Error(ex, "Failed to initialize database");
 }
 
 Log.Information("Starting API...");
