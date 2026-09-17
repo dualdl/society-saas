@@ -57,6 +57,21 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         base.OnModelCreating(modelBuilder);
         
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        foreach (var foreignKey in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(e => e.GetForeignKeys()))
+        {
+            foreignKey.DeleteBehavior = DeleteBehavior.NoAction;
+        }
+
+        foreach (var key in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(e => e.GetProperties())
+            .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
+        {
+            modelBuilder.Entity(key.DeclaringType.ClrType)
+                .Property(key.ClrType, key.Name)
+                .HasPrecision(18, 2);
+        }
     }
     
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

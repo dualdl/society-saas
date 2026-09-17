@@ -89,12 +89,15 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Adjustment")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("AmountPaid")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("BalanceOutstanding")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("BillDate")
@@ -126,6 +129,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("CurrentCharges")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("DeletedAt")
@@ -141,6 +145,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("GrandTotal")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsCancelled")
@@ -150,9 +155,11 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("LateFee")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PreviousOutstanding")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<byte[]>("RowVersion")
@@ -189,6 +196,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("BillId")
@@ -245,6 +253,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("CalculationType")
@@ -436,9 +445,11 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("BuiltUpArea")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("CarpetArea")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -609,9 +620,11 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal?>("MaximumFine")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Percentage")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("TenantId")
@@ -707,6 +720,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("AsOfDate")
@@ -769,6 +783,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -856,6 +871,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("BillId")
@@ -908,6 +924,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1172,7 +1189,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", null)
                         .WithMany("AuditLogs")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -1181,13 +1198,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Flat", "Flat")
                         .WithMany("Bills")
                         .HasForeignKey("FlatId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Bills")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Flat");
@@ -1200,13 +1217,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Bill", "Bill")
                         .WithMany("BillLines")
                         .HasForeignKey("BillId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Charge", "Charge")
                         .WithMany("BillLines")
                         .HasForeignKey("ChargeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Bill");
@@ -1219,7 +1236,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Charges")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Tenant");
@@ -1230,12 +1247,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Flats")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Wing", "Wing")
                         .WithMany("Flats")
-                        .HasForeignKey("WingId");
+                        .HasForeignKey("WingId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Tenant");
 
@@ -1247,7 +1265,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.ImportJob", "ImportJob")
                         .WithMany("ImportRows")
                         .HasForeignKey("ImportJobId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ImportJob");
@@ -1258,13 +1276,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Flat", "Flat")
                         .WithMany("Members")
                         .HasForeignKey("FlatId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Members")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Flat");
@@ -1277,13 +1295,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Flat", "Flat")
                         .WithOne("OpeningBalance")
                         .HasForeignKey("SocietySaaS.Domain.Entities.OpeningBalance", "FlatId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Flat");
@@ -1296,13 +1314,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Flat", "Flat")
                         .WithMany("Payments")
                         .HasForeignKey("FlatId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Payments")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Flat");
@@ -1315,13 +1333,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Bill", "Bill")
                         .WithMany("PaymentAllocations")
                         .HasForeignKey("BillId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Payment", "Payment")
                         .WithMany("PaymentAllocations")
                         .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Bill");
@@ -1334,19 +1352,19 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Flat", "Flat")
                         .WithMany("Receipts")
                         .HasForeignKey("FlatId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Payment", "Payment")
                         .WithOne("Receipt")
                         .HasForeignKey("SocietySaaS.Domain.Entities.Receipt", "PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Receipts")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Flat");
@@ -1361,13 +1379,13 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SocietySaaS.Domain.Entities.User", "User")
                         .WithMany("UserTenants")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Tenant");
@@ -1380,7 +1398,7 @@ namespace SocietySaaS.Infrastructure.Migrations
                     b.HasOne("SocietySaaS.Domain.Entities.Tenant", "Tenant")
                         .WithMany("Wings")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Tenant");
