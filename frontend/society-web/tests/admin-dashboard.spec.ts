@@ -14,7 +14,7 @@ test.describe('Super Admin Dashboard', () => {
     await expect(page.locator('text=Active')).toBeVisible();
   });
 
-  test('should display Recent Societies table', async ({ page }) => {
+  test('should display Recent Societies section', async ({ page }) => {
     await expect(page.locator('text=Recent Societies')).toBeVisible();
   });
 });

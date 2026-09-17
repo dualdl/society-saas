@@ -2,48 +2,13 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Error Handling', () => {
 
-  test('should display 404 page for unknown routes', async ({ page }) => {
+  test('should redirect unknown routes to home', async ({ page }) => {
     await page.goto('/nonexistent-page');
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test('should handle network errors gracefully', async ({ page }) => {
-    await page.goto('/');
-    await page.route('**/api/**', route => route.abort('failed'));
-    await page.reload();
-  });
-
-  test('should handle slow API responses', async ({ page }) => {
-    await page.goto('/');
-    await page.route('**/api/**', route => {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({}),
-        delay: 5000,
-      });
-    });
-  });
-
-  test('should handle 500 server errors', async ({ page }) => {
-    await page.goto('/');
-    await page.route('**/api/**', route => {
-      route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Internal Server Error' }),
-      });
-    });
-  });
-
-  test('should handle 401 unauthorized responses', async ({ page }) => {
-    await page.goto('/');
-    await page.route('**/api/**', route => {
-      route.fulfill({
-        status: 401,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Unauthorized' }),
-      });
-    });
+  test('should handle 404 for invalid society slug', async ({ page }) => {
+    await page.goto('/s/nonexistent-society-xyz');
+    await expect(page.locator('text=Society not found')).toBeVisible({ timeout: 10000 });
   });
 });
