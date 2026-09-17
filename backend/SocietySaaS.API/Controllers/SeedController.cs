@@ -26,7 +26,21 @@ public class SeedController : ControllerBase
                 await SeedData.SeedAsync(_db);
                 return Ok(ApiResponse<object>.Ok(new { message = "Database seeded successfully" }));
             }
-            return Ok(ApiResponse<object>.Ok(new { message = "Database already seeded" }));
+            return Ok(ApiResponse<object>.Ok(new { message = "Database already seeded. Use POST /api/v1/admin/seed/force to re-seed." }));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message, ex.InnerException != null ? new List<SocietySaaS.Shared.ApiError> { new SocietySaaS.Shared.ApiError { Code = "INNER_EXCEPTION", Message = ex.InnerException.Message } } : null));
+        }
+    }
+
+    [HttpPost("seed/force")]
+    public async Task<IActionResult> ForceSeed()
+    {
+        try
+        {
+            await SeedData.SeedAsync(_db);
+            return Ok(ApiResponse<object>.Ok(new { message = "Database re-seeded successfully" }));
         }
         catch (Exception ex)
         {
@@ -46,7 +60,9 @@ public class SeedController : ControllerBase
             var tenantCount = await _db.Tenants.CountAsync();
             var flatCount = await _db.Flats.CountAsync();
             var billCount = await _db.Bills.CountAsync();
-            return Ok(ApiResponse<object>.Ok(new { connected = true, userCount, tenantCount, flatCount, billCount }));
+            var paymentCount = await _db.Payments.CountAsync();
+            var receiptCount = await _db.Receipts.CountAsync();
+            return Ok(ApiResponse<object>.Ok(new { connected = true, userCount, tenantCount, flatCount, billCount, paymentCount, receiptCount }));
         }
         catch (Exception ex)
         {
