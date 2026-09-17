@@ -31,6 +31,7 @@ if (builder.Environment.IsProduction())
 }
 
 Log.Information("Environment: {Env}", builder.Environment.EnvironmentName);
+Log.Information("Has SQL connection string: {Has}", !string.IsNullOrEmpty(connectionString));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sql =>
@@ -85,7 +86,7 @@ else
         error.Run(async context =>
         {
             var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
-            Log.Error(exception, "Unhandled exception");
+            Log.Error(exception, "Unhandled exception: {Message}", exception?.Message);
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
@@ -109,25 +110,29 @@ app.MapControllers();
 
 try
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        Log.Information("Checking database connectivity...");
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var canConnect = await db.Database.CanConnectAsync();
-        if (!canConnect)
-        {
-            Log.Error("Cannot connect to database.");
-        }
-        else
-        {
-            Log.Information("Database connection OK.");
-        }
+    Log.Information("Starting database migration...");
+    await db.Database.MigrateAsync();
+    Log.Information("Migration complete.");
+
+    if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
+    {
+        Log.Information("No superadmin found. Seeding...");
+        await SeedData.SeedAsync(db);
+        Log.Information("Seeding complete.");
+    }
+    else
+    {
+        Log.Information("Database already seeded. Users: {Count}", await db.Users.CountAsync());
     }
 }
 catch (Exception ex)
 {
-    Log.Error(ex, "Database connectivity check failed");
+    Log.Error(ex, "Database initialization failed: {Message}", ex.Message);
+    if (ex.InnerException != null)
+        Log.Error(ex.InnerException, "Inner exception: {Message}", ex.InnerException.Message);
 }
 
 Log.Information("Starting API...");

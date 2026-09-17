@@ -20,19 +20,16 @@ public class SeedController : ControllerBase
     {
         try
         {
-            await _db.Database.EnsureDeletedAsync();
-            await _db.Database.MigrateAsync();
-
             if (!await _db.Users.AnyAsync(u => u.IsSuperAdmin))
             {
                 await SeedData.SeedAsync(_db);
-                return Ok(new { message = "Database created and seeded successfully" });
+                return Ok(new { message = "Database seeded successfully" });
             }
             return Ok(new { message = "Database already seeded" });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message, inner = ex.InnerException?.Message });
+            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
         }
     }
 
@@ -41,10 +38,14 @@ public class SeedController : ControllerBase
     {
         try
         {
+            var canConnect = await _db.Database.CanConnectAsync();
+            if (!canConnect) return Ok(new { connected = false });
+
             var userCount = await _db.Users.CountAsync();
+            var tenantCount = await _db.Tenants.CountAsync();
             var flatCount = await _db.Flats.CountAsync();
             var billCount = await _db.Bills.CountAsync();
-            return Ok(new { userCount, flatCount, billCount, connected = true });
+            return Ok(new { connected = true, userCount, tenantCount, flatCount, billCount });
         }
         catch (Exception ex)
         {
