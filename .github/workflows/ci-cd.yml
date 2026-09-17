@@ -49,9 +49,76 @@ jobs:
         env:
           CI: false
 
+  ui-tests:
+    name: Playwright UI Tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend/society-web
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+        working-directory: frontend/society-web
+
+      - name: Build Frontend
+        run: npm run build
+        working-directory: frontend/society-web
+        env:
+          CI: false
+
+      - name: Build Backend
+        run: dotnet build -c Release
+        working-directory: backend
+
+      - name: Start Backend API
+        run: |
+          cd backend
+          dotnet run --project SocietySaaS.API &
+        env:
+          ASPNETCORE_URLS: http://localhost:5000
+
+      - name: Wait for API
+        run: |
+          until curl -s http://localhost:5000/api/v1/health; do
+            sleep 2
+          done
+        timeout-minutes: 2
+
+      - name: Run Playwright Tests
+        run: npx playwright test
+        working-directory: frontend/society-web
+        env:
+          BASE_URL: http://localhost:3000
+          API_URL: http://localhost:5000
+
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/society-web/playwright-report/
+          retention-days: 30
+
   deploy:
     name: Deploy to Azure
-    needs: build
+    needs: [build, ui-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     

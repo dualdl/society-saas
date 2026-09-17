@@ -48,6 +48,22 @@ public class SeedController : ControllerBase
         }
     }
 
+    [HttpPost("seed/recreate")]
+    public async Task<IActionResult> RecreateAndSeed()
+    {
+        try
+        {
+            await _db.Database.EnsureDeletedAsync();
+            await _db.Database.MigrateAsync();
+            await SeedData.SeedAsync(_db);
+            return Ok(ApiResponse<object>.Ok(new { message = "Database recreated, migrated, and seeded successfully" }));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message, ex.InnerException != null ? new List<SocietySaaS.Shared.ApiError> { new SocietySaaS.Shared.ApiError { Code = "INNER_EXCEPTION", Message = ex.InnerException.Message } } : null));
+        }
+    }
+
     [HttpGet("status")]
     public async Task<IActionResult> Status()
     {
