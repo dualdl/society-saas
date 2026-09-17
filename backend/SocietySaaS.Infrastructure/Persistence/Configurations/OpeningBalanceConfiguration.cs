@@ -11,5 +11,6 @@ public class OpeningBalanceConfiguration : IEntityTypeConfiguration<OpeningBalan
         builder.HasKey(o => o.Id);
         builder.HasIndex(o => o.FlatId).IsUnique();
         builder.Property(o => o.BalanceType).HasMaxLength(20);
+        builder.HasOne(o => o.Flat).WithOne(f => f.OpeningBalance).HasForeignKey<OpeningBalance>(o => o.FlatId).OnDelete(DeleteBehavior.Restrict);
     }
 }

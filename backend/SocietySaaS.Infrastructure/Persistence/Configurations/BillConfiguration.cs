@@ -14,5 +14,6 @@ public class BillConfiguration : IEntityTypeConfiguration<Bill>
         builder.Property(b => b.Status).HasMaxLength(20);
         builder.HasIndex(b => new { b.TenantId, b.BillingPeriod });
         builder.HasIndex(b => new { b.TenantId, b.FlatId });
+        builder.HasOne(b => b.Flat).WithMany(f => f.Bills).HasForeignKey(b => b.FlatId).OnDelete(DeleteBehavior.Restrict);
     }
 }

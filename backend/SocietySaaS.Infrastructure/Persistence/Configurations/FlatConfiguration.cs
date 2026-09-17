@@ -13,6 +13,6 @@ public class FlatConfiguration : IEntityTypeConfiguration<Flat>
         builder.Property(f => f.FlatType).HasMaxLength(20);
         builder.Property(f => f.OccupancyStatus).HasMaxLength(20);
         builder.HasIndex(f => new { f.TenantId, f.FlatNumber });
-        builder.HasOne(f => f.Wing).WithMany().HasForeignKey(f => f.WingId);
+        builder.HasOne(f => f.Wing).WithMany(w => w.Flats).HasForeignKey(f => f.WingId).IsRequired(false);
     }
 }

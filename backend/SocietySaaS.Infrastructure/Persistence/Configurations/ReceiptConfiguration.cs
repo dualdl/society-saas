@@ -11,5 +11,7 @@ public class ReceiptConfiguration : IEntityTypeConfiguration<Receipt>
         builder.HasKey(r => r.Id);
         builder.Property(r => r.ReceiptNumber).IsRequired().HasMaxLength(50);
         builder.HasIndex(r => new { r.TenantId, r.ReceiptDate });
+        builder.HasOne(r => r.Flat).WithMany(f => f.Receipts).HasForeignKey(r => r.FlatId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(r => r.Payment).WithMany().HasForeignKey(r => r.PaymentId).OnDelete(DeleteBehavior.Restrict);
     }
 }

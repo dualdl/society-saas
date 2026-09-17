@@ -13,5 +13,6 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.PaymentMode).IsRequired().HasMaxLength(20);
         builder.Property(p => p.Status).HasMaxLength(20);
         builder.HasIndex(p => new { p.TenantId, p.PaymentDate });
+        builder.HasOne(p => p.Flat).WithMany(f => f.Payments).HasForeignKey(p => p.FlatId).OnDelete(DeleteBehavior.Restrict);
     }
 }
