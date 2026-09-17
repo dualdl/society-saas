@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using SocietySaaS.Application.Common.Interfaces;
-using SocietySaaS.Domain.Entities;
 using SocietySaaS.Infrastructure.Persistence;
 using SocietySaaS.Infrastructure.Services;
 
@@ -32,10 +31,13 @@ if (builder.Environment.IsProduction())
 }
 
 Log.Information("Environment: {Env}", builder.Environment.EnvironmentName);
-Log.Information("Connection string source: {Source}", builder.Environment.IsProduction() ? "AZURE_SQL_CONNECTIONSTRING" : "DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sql =>
+    {
+        sql.CommandTimeout(120);
+        sql.EnableRetryOnFailure(3);
+    }));
 
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
@@ -86,7 +88,11 @@ else
             Log.Error(exception, "Unhandled exception");
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(new { message = "Internal server error", detail = exception?.Message }?.ToString() ?? "{}");
+            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                message = "Internal server error",
+                detail = exception?.Message
+            }));
         });
     });
 }
@@ -101,58 +107,55 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+app.MapPost("/api/v1/admin/seed", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        Log.Information("Seed endpoint called. Deleting and recreating DB...");
+        await db.Database.EnsureDeletedAsync();
+        Log.Information("Database deleted.");
+
+        Log.Information("Creating database...");
+        await db.Database.EnsureCreatedAsync();
+        Log.Information("Database created.");
+
+        if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
+        {
+            Log.Information("Seeding data...");
+            await SeedData.SeedAsync(db);
+            Log.Information("Data seeded successfully.");
+            return Results.Ok(new { message = "Database created and seeded successfully" });
+        }
+        return Results.Ok(new { message = "Database already seeded" });
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Seed failed");
+        return Results.BadRequest(new { message = ex.Message, innerException = ex.InnerException?.Message });
+    }
+});
+
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Log.Information("Checking database connectivity...");
 
-        Log.Information("Checking database state...");
         var canConnect = await db.Database.CanConnectAsync();
-        Log.Information("Can connect to database: {CanConnect}", canConnect);
-
         if (!canConnect)
         {
-            Log.Error("Cannot connect to database. Skipping initialization.");
+            Log.Error("Cannot connect to database.");
         }
         else
         {
-            bool needsInit = false;
-            try
-            {
-                await db.Users.AnyAsync();
-                Log.Information("Users table exists and is accessible.");
-            }
-            catch
-            {
-                needsInit = true;
-                Log.Information("Users table not found or inaccessible. Will recreate database.");
-            }
-
-            if (needsInit)
-            {
-                Log.Information("Recreating database from scratch...");
-                await db.Database.EnsureDeletedAsync();
-                await db.Database.EnsureCreatedAsync();
-                Log.Information("Database created successfully.");
-            }
-
-            if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
-            {
-                Log.Information("Seeding database...");
-                await SeedData.SeedAsync(db);
-                Log.Information("Database seeded successfully.");
-            }
-            else
-            {
-                Log.Information("Database already seeded.");
-            }
+            Log.Information("Database connection OK.");
         }
     }
 }
 catch (Exception ex)
 {
-    Log.Error(ex, "Failed to initialize database");
+    Log.Error(ex, "Database connectivity check failed");
 }
 
 Log.Information("Starting API...");
