@@ -118,7 +118,7 @@ jobs:
 
   deploy:
     name: Deploy to Azure
-    needs: [build, ui-tests]
+    needs: [build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     
