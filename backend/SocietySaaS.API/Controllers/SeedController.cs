@@ -21,7 +21,7 @@ public class SeedController : ControllerBase
         try
         {
             await _db.Database.EnsureDeletedAsync();
-            await _db.Database.EnsureCreatedAsync();
+            await _db.Database.MigrateAsync();
 
             if (!await _db.Users.AnyAsync(u => u.IsSuperAdmin))
             {
