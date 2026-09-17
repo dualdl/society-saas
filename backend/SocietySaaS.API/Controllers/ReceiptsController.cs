@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Application.Common.DTOs;
-using SocietySaaS.Application.Common.Interfaces;
+using SocietySaaS.Application.Services;
+using SocietySaaS.Shared;
 
 namespace SocietySaaS.API.Controllers;
 
@@ -11,49 +11,39 @@ namespace SocietySaaS.API.Controllers;
 [Authorize]
 public class ReceiptsController : ControllerBase
 {
-    private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUser;
+    private readonly IReceiptService _receiptService;
 
-    public ReceiptsController(IApplicationDbContext context, ICurrentUserService currentUser)
+    public ReceiptsController(IReceiptService receiptService)
     {
-        _context = context;
-        _currentUser = currentUser;
+        _receiptService = receiptService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] Guid? flatId = null)
     {
-        var tenantId = _currentUser.TenantId;
-        if (tenantId == null) return BadRequest("Tenant not selected");
-
-        var query = _context.Receipts
-            .Include(r => r.Flat)
-            .Where(r => r.TenantId == tenantId && !r.IsDeleted);
-
-        if (flatId.HasValue)
-            query = query.Where(r => r.FlatId == flatId.Value);
-
-        var total = await query.CountAsync();
-        var receipts = await query
-            .OrderByDescending(r => r.ReceiptDate)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(r => new ReceiptDto(r.Id, r.ReceiptNumber, r.ReceiptDate, r.Amount, r.PaymentMode, r.TransactionReference, r.PdfUrl, r.PaymentId, r.FlatId, r.Flat.FlatNumber))
-            .ToListAsync();
-
-        return Ok(new { items = receipts, total, page, pageSize });
+        try
+        {
+            var result = await _receiptService.GetAllAsync(page, pageSize, flatId);
+            return Ok(ApiResponse<object>.Ok(new { items = result.Items, total = result.TotalCount, page = result.PageNumber, pageSize = result.PageSize }));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var receipt = await _context.Receipts
-            .Include(r => r.Flat)
-            .Include(r => r.Payment)
-            .FirstOrDefaultAsync(r => r.Id == id);
-
-        if (receipt == null) return NotFound();
-
-        return Ok(new ReceiptDto(receipt.Id, receipt.ReceiptNumber, receipt.ReceiptDate, receipt.Amount, receipt.PaymentMode, receipt.TransactionReference, receipt.PdfUrl, receipt.PaymentId, receipt.FlatId, receipt.Flat?.FlatNumber));
+        try
+        {
+            var receipt = await _receiptService.GetByIdAsync(id);
+            if (receipt == null) return NotFound(ApiResponse<object>.Fail("Receipt not found"));
+            return Ok(ApiResponse<ReceiptDto>.Ok(receipt));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 }

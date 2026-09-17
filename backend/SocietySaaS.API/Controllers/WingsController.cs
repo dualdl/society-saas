@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Application.Common.DTOs;
-using SocietySaaS.Application.Common.Interfaces;
-using SocietySaaS.Domain.Entities;
+using SocietySaaS.Application.Services;
+using SocietySaaS.Shared;
 
 namespace SocietySaaS.API.Controllers;
 
@@ -12,84 +11,89 @@ namespace SocietySaaS.API.Controllers;
 [Authorize]
 public class WingsController : ControllerBase
 {
-    private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUser;
+    private readonly IWingService _wingService;
 
-    public WingsController(IApplicationDbContext context, ICurrentUserService currentUser)
+    public WingsController(IWingService wingService)
     {
-        _context = context;
-        _currentUser = currentUser;
+        _wingService = wingService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var tenantId = _currentUser.TenantId;
-        if (tenantId == null) return BadRequest("Tenant not selected");
-
-        var wings = await _context.Wings
-            .Where(w => w.TenantId == tenantId && !w.IsDeleted)
-            .OrderBy(w => w.Name)
-            .Select(w => new WingDto(w.Id, w.Name, w.TotalFloors, w.FlatsPerFloor, w.IsActive))
-            .ToListAsync();
-        return Ok(wings);
+        try
+        {
+            var wings = await _wingService.GetAllAsync();
+            return Ok(ApiResponse<List<WingDto>>.Ok(wings));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var wing = await _context.Wings.FindAsync(id);
-        if (wing == null) return NotFound();
-        return Ok(new WingDto(wing.Id, wing.Name, wing.TotalFloors, wing.FlatsPerFloor, wing.IsActive));
+        try
+        {
+            var wing = await _wingService.GetByIdAsync(id);
+            if (wing == null) return NotFound(ApiResponse<object>.Fail("Wing not found"));
+            return Ok(ApiResponse<WingDto>.Ok(wing));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateWingRequest request)
     {
-        var tenantId = _currentUser.TenantId;
-        if (tenantId == null) return BadRequest("Tenant not selected");
-
-        var wing = new Wing
+        try
         {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId.Value,
-            Name = request.Name,
-            TotalFloors = request.TotalFloors,
-            FlatsPerFloor = request.FlatsPerFloor,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Wings.Add(wing);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = wing.Id }, wing);
+            var wing = await _wingService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = wing.Id }, ApiResponse<WingDto>.Ok(wing));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateWingRequest request)
     {
-        var wing = await _context.Wings.FindAsync(id);
-        if (wing == null) return NotFound();
-
-        wing.Name = request.Name;
-        wing.TotalFloors = request.TotalFloors;
-        wing.FlatsPerFloor = request.FlatsPerFloor;
-        wing.IsActive = request.IsActive;
-        wing.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(wing);
+        try
+        {
+            var wing = await _wingService.UpdateAsync(id, request);
+            return Ok(ApiResponse<WingDto>.Ok(wing));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var wing = await _context.Wings.FindAsync(id);
-        if (wing == null) return NotFound();
-
-        wing.IsDeleted = true;
-        wing.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return NoContent();
+        try
+        {
+            await _wingService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 }

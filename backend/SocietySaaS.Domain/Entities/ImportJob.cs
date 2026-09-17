@@ -2,13 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SocietySaaS.Domain.Entities;
 
-public class ImportJob
+public class ImportJob : Common.BaseEntity
 {
-    [Key]
-    public Guid Id { get; set; }
-    
-    public Guid TenantId { get; set; }
-    
     [Required]
     [MaxLength(100)]
     public string JobType { get; set; } = string.Empty;
@@ -27,8 +22,6 @@ public class ImportJob
     public int ProcessedRows { get; set; }
     
     public int ErrorRows { get; set; }
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime? CompletedAt { get; set; }
     

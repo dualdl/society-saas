@@ -52,6 +52,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     
     public DbSet<LatePaymentRule> LatePaymentRules => Set<LatePaymentRule>();
     
+    public DbSet<OtpRequest> OtpRequests => Set<OtpRequest>();
+    
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    
+    public DbSet<LedgerEntry> LedgerEntries => Set<LedgerEntry>();
+    
+    public DbSet<Account> Accounts => Set<Account>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

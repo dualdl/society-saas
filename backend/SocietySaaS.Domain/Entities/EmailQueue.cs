@@ -2,13 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SocietySaaS.Domain.Entities;
 
-public class EmailQueue
+public class EmailQueue : Common.BaseEntity
 {
-    [Key]
-    public Guid Id { get; set; }
-    
-    public Guid TenantId { get; set; }
-    
     [Required]
     [MaxLength(100)]
     public string TemplateName { get; set; } = string.Empty;
@@ -28,8 +23,6 @@ public class EmailQueue
     public string Status { get; set; } = "Pending";
     
     public int RetryCount { get; set; }
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime? SentAt { get; set; }
     

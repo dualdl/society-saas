@@ -2,13 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SocietySaaS.Domain.Entities;
 
-public class LatePaymentRule
+public class LatePaymentRule : Common.BaseEntity
 {
-    [Key]
-    public Guid Id { get; set; }
-    
-    public Guid TenantId { get; set; }
-    
     public bool IsEnabled { get; set; }
     
     public decimal Percentage { get; set; }
@@ -22,8 +17,4 @@ public class LatePaymentRule
     public string Frequency { get; set; } = "Monthly";
     
     public decimal? MaximumFine { get; set; }
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    public DateTime? UpdatedAt { get; set; }
 }

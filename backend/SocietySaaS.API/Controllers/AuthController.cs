@@ -1,9 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Application.Common.DTOs;
 using SocietySaaS.Application.Common.Interfaces;
-using SocietySaaS.Domain.Entities;
-using SocietySaaS.Infrastructure.Services;
+using SocietySaaS.Application.Services;
+using SocietySaaS.Shared;
 
 namespace SocietySaaS.API.Controllers;
 
@@ -11,106 +11,141 @@ namespace SocietySaaS.API.Controllers;
 [Route("api/v1/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IApplicationDbContext _context;
-    private readonly JwtTokenService _jwtTokenService;
+    private readonly IAuthService _authService;
     private readonly ICurrentUserService _currentUser;
 
-    public AuthController(IApplicationDbContext context, JwtTokenService jwtTokenService, ICurrentUserService currentUser)
+    public AuthController(IAuthService authService, ICurrentUserService currentUser)
     {
-        _context = context;
-        _jwtTokenService = jwtTokenService;
+        _authService = authService;
         _currentUser = currentUser;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
-        if (user == null || !JwtTokenService.VerifyPassword(request.Password, user.PasswordHash ?? ""))
-            return Unauthorized(new { message = "Invalid email or password" });
-
-        user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        Guid? tenantId = null;
-        string? tenantName = null;
-
-        if (!user.IsSuperAdmin)
+        try
         {
-            var userTenant = await _context.UserTenants
-                .Include(ut => ut.Tenant)
-                .FirstOrDefaultAsync(ut => ut.UserId == user.Id && ut.IsActive);
-            if (userTenant != null)
-            {
-                tenantId = userTenant.TenantId;
-                tenantName = userTenant.Tenant?.Name;
-            }
+            var result = await _authService.LoginAsync(request);
+            if (!result.Success)
+                return Unauthorized(ApiResponse<object>.Fail(result.Message));
+
+            return Ok(ApiResponse<LoginResponse>.Ok(result));
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
+    }
 
-        var token = _jwtTokenService.GenerateToken(user, tenantId);
+    [HttpPost("request-otp")]
+    public async Task<IActionResult> RequestOtp([FromBody] OtpRequestDto request)
+    {
+        try
+        {
+            var result = await _authService.RequestOtpAsync(request.Email);
+            if (!result.Success)
+                return BadRequest(ApiResponse<object>.Fail(result.Message));
 
-        return Ok(new LoginResponse(token, user.Email, user.FirstName ?? "", user.LastName ?? "", user.IsSuperAdmin, tenantId, tenantName));
+            return Ok(ApiResponse<LoginResponse>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
+    {
+        try
+        {
+            var result = await _authService.VerifyOtpAsync(request.Email, request.Code);
+            if (!result.Success)
+                return Unauthorized(ApiResponse<object>.Fail(result.Message));
+
+            return Ok(ApiResponse<LoginResponse>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        try
+        {
+            var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+            if (!result.Success)
+                return Unauthorized(ApiResponse<object>.Fail(result.Message));
+
+            return Ok(ApiResponse<LoginResponse>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-            return Conflict(new { message = "Email already registered" });
-
-        var user = new User
+        try
         {
-            Id = Guid.NewGuid(),
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Mobile = request.Mobile,
-            PasswordHash = JwtTokenService.HashPassword(request.Password),
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
+            var result = await _authService.RegisterAsync(request);
+            if (!result.Success)
+                return Conflict(ApiResponse<object>.Fail(result.Message));
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var token = _jwtTokenService.GenerateToken(user);
-        return Ok(new LoginResponse(token, user.Email, user.FirstName ?? "", user.LastName ?? "", false, null, null));
+            return Ok(ApiResponse<LoginResponse>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
+    [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser()
     {
-        if (!_currentUser.IsAuthenticated)
-            return Unauthorized();
-
-        var user = await _context.Users.FindAsync(_currentUser.UserId);
-        if (user == null) return NotFound();
-
-        return Ok(new
+        try
         {
-            user.Id,
-            user.Email,
-            user.FirstName,
-            user.LastName,
-            user.IsSuperAdmin,
-            _currentUser.TenantId
-        });
+            if (!_currentUser.IsAuthenticated)
+                return Unauthorized();
+
+            var user = await _authService.GetMeAsync(_currentUser.UserId?.ToString() ?? "");
+            if (user == null) return NotFound(ApiResponse<object>.Fail("User not found"));
+
+            return Ok(ApiResponse<object>.Ok(user));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
+    [Authorize]
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        if (!_currentUser.IsAuthenticated) return Unauthorized();
+        try
+        {
+            if (!_currentUser.IsAuthenticated) return Unauthorized();
 
-        var user = await _context.Users.FindAsync(_currentUser.UserId);
-        if (user == null) return NotFound();
+            var result = await _authService.ChangePasswordAsync(_currentUser.UserId?.ToString() ?? "", request);
+            if (!result.Success)
+                return BadRequest(ApiResponse<object>.Fail(result.Message));
 
-        if (!JwtTokenService.VerifyPassword(request.OldPassword, user.PasswordHash ?? ""))
-            return BadRequest(new { message = "Current password is incorrect" });
-
-        user.PasswordHash = JwtTokenService.HashPassword(request.NewPassword);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Password changed successfully" });
+            return Ok(ApiResponse<object>.Ok(new { message = result.Message }));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 }
+
+public record OtpRequestDto(string Email);
+public record VerifyOtpRequest(string Email, string Code);
+public record RefreshTokenRequest(string RefreshToken);

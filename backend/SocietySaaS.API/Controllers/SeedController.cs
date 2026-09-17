@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Infrastructure.Persistence;
+using SocietySaaS.Shared;
 
 namespace SocietySaaS.API.Controllers;
 
@@ -23,13 +24,13 @@ public class SeedController : ControllerBase
             if (!await _db.Users.AnyAsync(u => u.IsSuperAdmin))
             {
                 await SeedData.SeedAsync(_db);
-                return Ok(new { message = "Database seeded successfully" });
+                return Ok(ApiResponse<object>.Ok(new { message = "Database seeded successfully" }));
             }
-            return Ok(new { message = "Database already seeded" });
+            return Ok(ApiResponse<object>.Ok(new { message = "Database already seeded" }));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = ex.Message, inner = ex.InnerException?.Message });
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message, ex.InnerException != null ? new List<SocietySaaS.Shared.ApiError> { new SocietySaaS.Shared.ApiError { Code = "INNER_EXCEPTION", Message = ex.InnerException.Message } } : null));
         }
     }
 
@@ -39,17 +40,17 @@ public class SeedController : ControllerBase
         try
         {
             var canConnect = await _db.Database.CanConnectAsync();
-            if (!canConnect) return Ok(new { connected = false });
+            if (!canConnect) return Ok(ApiResponse<object>.Ok(new { connected = false }));
 
             var userCount = await _db.Users.CountAsync();
             var tenantCount = await _db.Tenants.CountAsync();
             var flatCount = await _db.Flats.CountAsync();
             var billCount = await _db.Bills.CountAsync();
-            return Ok(new { connected = true, userCount, tenantCount, flatCount, billCount });
+            return Ok(ApiResponse<object>.Ok(new { connected = true, userCount, tenantCount, flatCount, billCount }));
         }
         catch (Exception ex)
         {
-            return Ok(new { connected = false, error = ex.Message });
+            return Ok(ApiResponse<object>.Ok(new { connected = false, error = ex.Message }));
         }
     }
 }

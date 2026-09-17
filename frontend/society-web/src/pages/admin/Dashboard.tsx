@@ -1,12 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
   Box,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Button,
   Grid,
   Card,
   CardContent,
@@ -17,109 +13,102 @@ import {
   TableHead,
   TableRow,
   Paper,
+  LinearProgress,
+  Alert,
 } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
+import { superAdminApi } from '../../services/api';
 
 const AdminDashboard: React.FC = () => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await superAdminApi.dashboard();
+      setData(result);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton edge="start" color="inherit" sx={{ mr: 2 }}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            SocietyPro - Admin Dashboard
-          </Typography>
-          <Button color="inherit">Logout</Button>
-        </Toolbar>
-      </AppBar>
+    <Container maxWidth="lg">
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+        Super Admin Dashboard
+      </Typography>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Super Admin Dashboard
-          </Typography>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {loading && <LinearProgress sx={{ mb: 2 }} />}
 
-          {/* Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Societies
-                  </Typography>
-                  <Typography variant="h4">125</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Flats
-                  </Typography>
-                  <Typography variant="h4">48,500</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Users
-                  </Typography>
-                  <Typography variant="h4">75,200</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Typography color="textSecondary" gutterBottom>
-                    Active
-                  </Typography>
-                  <Typography variant="h4">119</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>Societies</Typography>
+              <Typography variant="h4">{data?.totalSocieties ?? '—'}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>Flats</Typography>
+              <Typography variant="h4">{data?.totalFlats?.toLocaleString() ?? '—'}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>Users</Typography>
+              <Typography variant="h4">{data?.totalUsers?.toLocaleString() ?? '—'}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>Active</Typography>
+              <Typography variant="h4">{data?.activeSocieties ?? '—'}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-          {/* Recent Societies */}
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Recent Societies
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Society</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created</TableCell>
+      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+        Recent Societies
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Society</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Created</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {!data?.recentSocieties?.length ? (
+              <TableRow><TableCell colSpan={3} align="center"><Typography color="text.secondary">No societies</Typography></TableCell></TableRow>
+            ) : (
+              data.recentSocieties.map((s: any) => (
+                <TableRow key={s.id}>
+                  <TableCell>{s.name}</TableCell>
+                  <TableCell>{s.status || 'Active'}</TableCell>
+                  <TableCell>{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'}</TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Society A</TableCell>
-                  <TableCell>Active</TableCell>
-                  <TableCell>1-Sep-2026</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Society B</TableCell>
-                  <TableCell>Active</TableCell>
-                  <TableCell>15-Aug-2026</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Society C</TableCell>
-                  <TableCell>Trial</TableCell>
-                  <TableCell>1-Sep-2026</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Container>
-      </Box>
-    </Box>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Container>
   );
 };
 

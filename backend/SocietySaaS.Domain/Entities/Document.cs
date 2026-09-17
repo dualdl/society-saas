@@ -2,13 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SocietySaaS.Domain.Entities;
 
-public class Document
+public class Document : Common.BaseEntity
 {
-    [Key]
-    public Guid Id { get; set; }
-    
-    public Guid TenantId { get; set; }
-    
     [Required]
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
@@ -25,8 +20,4 @@ public class Document
     public long FileSize { get; set; }
     
     public bool IsActive { get; set; } = true;
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    public string? CreatedBy { get; set; }
 }

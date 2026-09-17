@@ -4,11 +4,12 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using SocietySaaS.Application.Common.Interfaces;
 using SocietySaaS.Domain.Entities;
 
 namespace SocietySaaS.Infrastructure.Services;
 
-public class JwtTokenService
+public class JwtTokenService : IJwtTokenService
 {
     private readonly IConfiguration _configuration;
 

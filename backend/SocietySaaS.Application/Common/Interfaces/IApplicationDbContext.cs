@@ -45,5 +45,15 @@ public interface IApplicationDbContext
     
     DbSet<LatePaymentRule> LatePaymentRules { get; }
     
+    DbSet<OtpRequest> OtpRequests { get; }
+    
+    DbSet<RefreshToken> RefreshTokens { get; }
+    
+    DbSet<LedgerEntry> LedgerEntries { get; }
+    
+    DbSet<Account> Accounts { get; }
+    
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    
+    DbSet<T> Set<T>() where T : class;
 }

@@ -15,12 +15,23 @@ import Billing from './pages/Billing';
 import Payments from './pages/Payments';
 import Receipts from './pages/Receipts';
 import Reports from './pages/Reports';
+import Imports from './pages/Imports';
+import Audit from './pages/Audit';
+import Charges from './pages/Charges';
+import OpeningBalances from './pages/OpeningBalances';
+import LateFee from './pages/LateFee';
+import Settings from './pages/Settings';
+import ResidentDashboard from './pages/ResidentDashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminSocieties from './pages/admin/Societies';
+import AdminUsers from './pages/admin/Users';
+import AdminAudit from './pages/admin/Audit';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import Sidebar from './components/Sidebar';
+import AdminSidebar from './components/AdminSidebar';
 
 // Theme
 const theme = createTheme({
@@ -75,13 +86,14 @@ function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/society/login" element={<SocietyLogin />} />
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/resident" element={<ResidentDashboard />} />
 
               {/* Protected Society Routes */}
               <Route
                 path="/app"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <Sidebar><Dashboard /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -89,7 +101,7 @@ function App() {
                 path="/app/flats"
                 element={
                   <ProtectedRoute>
-                    <Flats />
+                    <Sidebar><Flats /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -97,7 +109,7 @@ function App() {
                 path="/app/members"
                 element={
                   <ProtectedRoute>
-                    <Members />
+                    <Sidebar><Members /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -105,7 +117,7 @@ function App() {
                 path="/app/billing"
                 element={
                   <ProtectedRoute>
-                    <Billing />
+                    <Sidebar><Billing /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -113,7 +125,7 @@ function App() {
                 path="/app/payments"
                 element={
                   <ProtectedRoute>
-                    <Payments />
+                    <Sidebar><Payments /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -121,7 +133,7 @@ function App() {
                 path="/app/receipts"
                 element={
                   <ProtectedRoute>
-                    <Receipts />
+                    <Sidebar><Receipts /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -129,7 +141,55 @@ function App() {
                 path="/app/reports"
                 element={
                   <ProtectedRoute>
-                    <Reports />
+                    <Sidebar><Reports /></Sidebar>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/imports"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar><Imports /></Sidebar>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/audit"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar><Audit /></Sidebar>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/charges"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar><Charges /></Sidebar>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/opening-balances"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar><OpeningBalances /></Sidebar>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/late-fee"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar><LateFee /></Sidebar>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app/settings"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar><Settings /></Sidebar>
                   </ProtectedRoute>
                 }
               />
@@ -139,7 +199,7 @@ function App() {
                 path="/admin/dashboard"
                 element={
                   <AdminRoute>
-                    <AdminDashboard />
+                    <AdminSidebar><AdminDashboard /></AdminSidebar>
                   </AdminRoute>
                 }
               />
@@ -147,7 +207,23 @@ function App() {
                 path="/admin/societies"
                 element={
                   <AdminRoute>
-                    <AdminSocieties />
+                    <AdminSidebar><AdminSocieties /></AdminSidebar>
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminRoute>
+                    <AdminSidebar><AdminUsers /></AdminSidebar>
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/audit"
+                element={
+                  <AdminRoute>
+                    <AdminSidebar><AdminAudit /></AdminSidebar>
                   </AdminRoute>
                 }
               />

@@ -1,11 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
   Box,
-  AppBar,
-  Toolbar,
-  IconButton,
   Button,
   Table,
   TableBody,
@@ -14,62 +11,90 @@ import {
   TableHead,
   TableRow,
   Paper,
+  LinearProgress,
+  Alert,
 } from '@mui/material';
-import { Menu as MenuIcon, GetApp } from '@mui/icons-material';
+import { GetApp } from '@mui/icons-material';
+import { receiptsApi } from '../services/api';
 
 const Receipts: React.FC = () => {
+  const [receipts, setReceipts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchReceipts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await receiptsApi.list(1, 50);
+      setReceipts(data.receipts || data || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchReceipts(); }, [fetchReceipts]);
+
+  const handleDownloadPdf = async (id: string) => {
+    try {
+      const blob = await receiptsApi.getPdf(id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt_${id}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message || 'Download failed');
+    }
+  };
+
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton edge="start" color="inherit" sx={{ mr: 2 }}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            SocietyPro - Receipts
-          </Typography>
-          <Button color="inherit">Logout</Button>
-        </Toolbar>
-      </AppBar>
+    <Container maxWidth="lg">
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>Receipts</Typography>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
-        <Container maxWidth="lg">
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Receipts
-          </Typography>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Receipt #</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Flat</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell>Mode</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell>RCT/26-27/000125</TableCell>
-                  <TableCell>10-Sep-2026</TableCell>
-                  <TableCell>A-101</TableCell>
-                  <TableCell>₹5,250</TableCell>
-                  <TableCell>UPI</TableCell>
-                  <TableCell>
-                    <Button size="small" startIcon={<GetApp />}>
-                      PDF
-                    </Button>
-                    <Button size="small">Email</Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Container>
-      </Box>
-    </Box>
+      {loading ? (
+        <LinearProgress />
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Receipt #</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Flat</TableCell>
+                <TableCell>Amount</TableCell>
+                <TableCell>Mode</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {receipts.length === 0 ? (
+                <TableRow><TableCell colSpan={6} align="center"><Typography color="text.secondary">No receipts found</Typography></TableCell></TableRow>
+              ) : (
+                receipts.map((r: any) => (
+                  <TableRow key={r.id}>
+                    <TableCell>{r.receiptNumber || r.id}</TableCell>
+                    <TableCell>{r.receiptDate ? new Date(r.receiptDate).toLocaleDateString() : '—'}</TableCell>
+                    <TableCell>{r.flatNumber || r.flatId}</TableCell>
+                    <TableCell>₹{r.amount?.toLocaleString() || '—'}</TableCell>
+                    <TableCell>{r.paymentMode || '—'}</TableCell>
+                    <TableCell>
+                      <Button size="small" startIcon={<GetApp />} onClick={() => handleDownloadPdf(r.id)}>
+                        PDF
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Container>
   );
 };
 

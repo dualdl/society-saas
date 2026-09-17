@@ -2,13 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SocietySaaS.Domain.Entities;
 
-public class AuditLog
+public class AuditLog : Common.BaseEntity
 {
-    [Key]
-    public Guid Id { get; set; }
-    
-    public Guid TenantId { get; set; }
-    
     public Guid? UserId { get; set; }
     
     [Required]

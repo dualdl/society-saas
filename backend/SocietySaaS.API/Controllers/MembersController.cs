@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Application.Common.DTOs;
-using SocietySaaS.Application.Common.Interfaces;
-using SocietySaaS.Domain.Entities;
+using SocietySaaS.Application.Services;
+using SocietySaaS.Shared;
 
 namespace SocietySaaS.API.Controllers;
 
@@ -12,107 +11,89 @@ namespace SocietySaaS.API.Controllers;
 [Authorize]
 public class MembersController : ControllerBase
 {
-    private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUser;
+    private readonly IMemberService _memberService;
 
-    public MembersController(IApplicationDbContext context, ICurrentUserService currentUser)
+    public MembersController(IMemberService memberService)
     {
-        _context = context;
-        _currentUser = currentUser;
+        _memberService = memberService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50, [FromQuery] string? search = null, [FromQuery] Guid? flatId = null)
     {
-        var tenantId = _currentUser.TenantId;
-        if (tenantId == null) return BadRequest("Tenant not selected");
-
-        var query = _context.Members
-            .Include(m => m.Flat)
-            .Where(m => m.TenantId == tenantId && !m.IsDeleted);
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(m => m.FirstName.Contains(search) || (m.LastName != null && m.LastName.Contains(search)) || m.Mobile.Contains(search));
-
-        if (flatId.HasValue)
-            query = query.Where(m => m.FlatId == flatId.Value);
-
-        var total = await query.CountAsync();
-        var members = await query
-            .OrderBy(m => m.FirstName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(m => new MemberDto(m.Id, m.FirstName, m.LastName, m.Mobile, m.Email, m.MemberType, m.IsPrimary, m.IsActive, m.FlatId, m.Flat.FlatNumber))
-            .ToListAsync();
-
-        return Ok(new { items = members, total, page, pageSize });
+        try
+        {
+            var result = await _memberService.GetAllAsync(page, pageSize, search, flatId);
+            return Ok(ApiResponse<object>.Ok(new { items = result.Items, total = result.TotalCount, page = result.PageNumber, pageSize = result.PageSize }));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var member = await _context.Members
-            .Include(m => m.Flat)
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (member == null) return NotFound();
-
-        return Ok(new MemberDto(member.Id, member.FirstName, member.LastName, member.Mobile, member.Email, member.MemberType, member.IsPrimary, member.IsActive, member.FlatId, member.Flat?.FlatNumber));
+        try
+        {
+            var member = await _memberService.GetByIdAsync(id);
+            if (member == null) return NotFound(ApiResponse<object>.Fail("Member not found"));
+            return Ok(ApiResponse<MemberDto>.Ok(member));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateMemberRequest request)
     {
-        var tenantId = _currentUser.TenantId;
-        if (tenantId == null) return BadRequest("Tenant not selected");
-
-        var member = new Member
+        try
         {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId.Value,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Mobile = request.Mobile,
-            Email = request.Email,
-            MemberType = request.MemberType,
-            IsPrimary = request.IsPrimary,
-            FlatId = request.FlatId,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Members.Add(member);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = member.Id }, member);
+            var member = await _memberService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = member.Id }, ApiResponse<MemberDto>.Ok(member));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateMemberRequest request)
     {
-        var member = await _context.Members.FindAsync(id);
-        if (member == null) return NotFound();
-
-        member.FirstName = request.FirstName;
-        member.LastName = request.LastName;
-        member.Mobile = request.Mobile;
-        member.Email = request.Email;
-        member.MemberType = request.MemberType;
-        member.IsPrimary = request.IsPrimary;
-        member.IsActive = request.IsActive;
-        member.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return Ok(member);
+        try
+        {
+            var member = await _memberService.UpdateAsync(id, request);
+            return Ok(ApiResponse<MemberDto>.Ok(member));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var member = await _context.Members.FindAsync(id);
-        if (member == null) return NotFound();
-
-        member.IsDeleted = true;
-        member.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return NoContent();
+        try
+        {
+            await _memberService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 }
