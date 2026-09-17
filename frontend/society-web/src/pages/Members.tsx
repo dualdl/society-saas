@@ -21,11 +21,15 @@ import { membersApi } from '../services/api';
 
 interface Member {
   id: string;
-  flatNumber: string;
-  name: string;
+  firstName: string;
+  lastName: string | null;
   mobile: string;
-  email: string;
+  email: string | null;
   memberType: string;
+  isPrimary: boolean;
+  isActive: boolean;
+  flatId: string;
+  flatNumber: string | null;
 }
 
 const Members: React.FC = () => {
@@ -79,21 +83,25 @@ const Members: React.FC = () => {
                 <TableCell>Mobile</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Type</TableCell>
+                <TableCell>Primary</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {members.length === 0 ? (
-                <TableRow><TableCell colSpan={6} align="center"><Typography color="text.secondary">No members found</Typography></TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} align="center"><Typography color="text.secondary">No members found</Typography></TableCell></TableRow>
               ) : (
                 members.map((member) => (
                   <TableRow key={member.id}>
                     <TableCell>{member.flatNumber || '—'}</TableCell>
-                    <TableCell>{member.name}</TableCell>
+                    <TableCell>{member.firstName} {member.lastName || ''}</TableCell>
                     <TableCell>{member.mobile || '—'}</TableCell>
                     <TableCell>{member.email || '—'}</TableCell>
                     <TableCell>
                       <Chip label={member.memberType || 'Owner'} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={member.isPrimary ? 'Yes' : 'No'} size="small" color={member.isPrimary ? 'primary' : 'default'} />
                     </TableCell>
                     <TableCell>
                       <Button size="small">Edit</Button>

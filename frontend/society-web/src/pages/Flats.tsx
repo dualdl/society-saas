@@ -21,11 +21,17 @@ import { flatsApi } from '../services/api';
 
 interface Flat {
   id: string;
-  wing: string;
+  wingId: string | null;
+  wingName: string | null;
   flatNumber: string;
   floor: number;
-  ownerName: string;
-  status: string;
+  carpetArea: number;
+  builtUpArea: number;
+  flatType: string | null;
+  occupancyStatus: string;
+  isActive: boolean;
+  memberCount: number;
+  balanceOutstanding: number;
 }
 
 const Flats: React.FC = () => {
@@ -78,24 +84,30 @@ const Flats: React.FC = () => {
                 <TableCell>Wing</TableCell>
                 <TableCell>Flat Number</TableCell>
                 <TableCell>Floor</TableCell>
-                <TableCell>Owner</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Area (sqft)</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Members</TableCell>
+                <TableCell>Outstanding</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {flats.length === 0 ? (
-                <TableRow><TableCell colSpan={6} align="center"><Typography color="text.secondary">No flats found</Typography></TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} align="center"><Typography color="text.secondary">No flats found</Typography></TableCell></TableRow>
               ) : (
                 flats.map((flat) => (
                   <TableRow key={flat.id}>
-                    <TableCell>{flat.wing}</TableCell>
+                    <TableCell>{flat.wingName || '—'}</TableCell>
                     <TableCell>{flat.flatNumber}</TableCell>
                     <TableCell>{flat.floor}</TableCell>
-                    <TableCell>{flat.ownerName || '—'}</TableCell>
+                    <TableCell>{flat.flatType || '—'}</TableCell>
+                    <TableCell>{flat.carpetArea || '—'}</TableCell>
                     <TableCell>
-                      <Chip label={flat.status || 'Active'} size="small" color={flat.status === 'Vacant' ? 'warning' : 'success'} />
+                      <Chip label={flat.occupancyStatus || 'Owner'} size="small" color={flat.occupancyStatus === 'Vacant' ? 'warning' : 'success'} />
                     </TableCell>
+                    <TableCell>{flat.memberCount ?? 0}</TableCell>
+                    <TableCell>₹{(flat.balanceOutstanding || 0).toLocaleString()}</TableCell>
                     <TableCell>
                       <Button size="small">Edit</Button>
                     </TableCell>

@@ -29,6 +29,31 @@ public class Tenant : Common.BaseEntity
     [MaxLength(500)]
     public string? LogoUrl { get; set; }
     
+    [MaxLength(50)]
+    public string? Slug { get; set; }
+    
+    [MaxLength(50)]
+    public string? EmailProvider { get; set; }
+    
+    [MaxLength(200)]
+    public string? SmtpHost { get; set; }
+    
+    public int? SmtpPort { get; set; }
+    
+    [MaxLength(200)]
+    public string? SmtpUser { get; set; }
+    
+    [MaxLength(200)]
+    public string? SmtpPassword { get; set; }
+    
+    public bool SmtpUseSsl { get; set; } = true;
+    
+    [MaxLength(200)]
+    public string? GmailAddress { get; set; }
+    
+    [MaxLength(200)]
+    public string? GmailAppPassword { get; set; }
+    
     public bool IsActive { get; set; } = true;
     
     public ICollection<Wing> Wings { get; set; } = new List<Wing>();

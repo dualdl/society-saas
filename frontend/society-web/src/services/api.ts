@@ -164,4 +164,27 @@ export const superAdminApi = {
   dashboard: () => apiRequest<any>('/api/v1/superadmin/dashboard'),
   societies: () => apiRequest<any>('/api/v1/superadmin/societies'),
   createSociety: (data: any) => apiRequest<any>('/api/v1/superadmin/societies', { method: 'POST', body: JSON.stringify(data) }),
+  deleteSociety: (id: string) => apiRequest<any>(`/api/v1/superadmin/societies/${id}`, { method: 'DELETE' }),
+  backupSociety: (id: string) => apiBlob(`/api/v1/superadmin/societies/${id}/backup`),
+  importSocieties: (file: File) => {
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch(`${API_BASE}/api/v1/superadmin/societies/import`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Import failed' }));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      return res.json();
+    });
+  },
+};
+
+export const settingsApi = {
+  get: () => apiRequest<any>('/api/v1/settings'),
+  update: (data: any) => apiRequest<any>('/api/v1/settings', { method: 'PUT', body: JSON.stringify(data) }),
 };

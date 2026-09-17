@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Pages
 import Landing from './pages/Landing';
+import SocietyLanding from './pages/SocietyLanding';
 import SocietyLogin from './pages/auth/SocietyLogin';
 import AdminLogin from './pages/auth/AdminLogin';
 import Dashboard from './pages/Dashboard';
@@ -84,6 +85,7 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
+              <Route path="/s/:slug" element={<SocietyLanding />} />
               <Route path="/society/login" element={<SocietyLogin />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/resident" element={<ResidentDashboard />} />

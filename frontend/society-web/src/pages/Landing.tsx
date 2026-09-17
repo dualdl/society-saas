@@ -15,6 +15,7 @@ import {
   Menu,
   MenuItem,
   Link,
+  TextField,
 } from '@mui/material';
 import {
   AccountBalance,
@@ -24,7 +25,7 @@ import {
   ImportExport,
   PhoneAndroid,
   ChevronRight,
-  Menu as MenuIcon,
+  Search,
 } from '@mui/icons-material';
 
 const features = [
@@ -63,6 +64,7 @@ const features = [
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [societySlug, setSocietySlug] = React.useState('');
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -70,6 +72,12 @@ const Landing: React.FC = () => {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleSocietySearch = () => {
+    if (societySlug.trim()) {
+      navigate(`/s/${societySlug.trim().toLowerCase().replace(/\s+/g, '')}`);
+    }
   };
 
   return (
@@ -146,6 +154,23 @@ const Landing: React.FC = () => {
               >
                 Society Login
               </Button>
+            </Box>
+
+            <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.100', borderRadius: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>Find Your Society</Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  size="small"
+                  placeholder="Enter society name (e.g., sunshineresidency)"
+                  value={societySlug}
+                  onChange={(e) => setSocietySlug(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSocietySearch()}
+                  sx={{ flexGrow: 1 }}
+                />
+                <Button variant="contained" startIcon={<Search />} onClick={handleSocietySearch}>
+                  Find
+                </Button>
+              </Box>
             </Box>
           </Grid>
           <Grid item xs={12} md={6}>

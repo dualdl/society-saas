@@ -19,13 +19,21 @@ public class TenantsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "SuperAdmin")]
-    public async Task<IActionResult> GetAll()
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAll([FromQuery] string? slug = null)
     {
         try
         {
-            var tenants = await _tenantService.GetAllAsync();
-            return Ok(ApiResponse<List<TenantDto>>.Ok(tenants));
+            if (!string.IsNullOrEmpty(slug))
+            {
+                var tenants = await _tenantService.GetAllAsync();
+                var tenant = tenants.FirstOrDefault(t => t.Slug == slug);
+                if (tenant == null) return NotFound(ApiResponse<object>.Fail("Society not found"));
+                return Ok(ApiResponse<TenantDto>.Ok(tenant));
+            }
+
+            var allTenants = await _tenantService.GetAllAsync();
+            return Ok(ApiResponse<List<TenantDto>>.Ok(allTenants));
         }
         catch (Exception ex)
         {

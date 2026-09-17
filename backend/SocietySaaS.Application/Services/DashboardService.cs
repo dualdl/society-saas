@@ -99,6 +99,7 @@ public class DashboardService : IDashboardService
         var nonDeletedTenants = tenants.Where(t => !t.IsDeleted).ToList();
         var totalSocieties = nonDeletedTenants.Count;
         var activeSocieties = nonDeletedTenants.Count(t => t.IsActive);
+        var totalFlats = allFlats.Count(f => !f.IsDeleted);
 
         var recentSocieties = nonDeletedTenants
             .OrderByDescending(t => t.CreatedAt)
@@ -110,6 +111,6 @@ public class DashboardService : IDashboardService
                 t.CreatedAt))
             .ToList();
 
-        return new AdminDashboardDto(totalSocieties, activeSocieties, 0, recentSocieties);
+        return new AdminDashboardDto(totalSocieties, activeSocieties, 0, totalFlats, recentSocieties);
     }
 }
