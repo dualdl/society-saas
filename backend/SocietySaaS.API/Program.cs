@@ -107,34 +107,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.MapPost("/api/v1/admin/seed", async (ApplicationDbContext db) =>
-{
-    try
-    {
-        Log.Information("Seed endpoint called. Deleting and recreating DB...");
-        await db.Database.EnsureDeletedAsync();
-        Log.Information("Database deleted.");
-
-        Log.Information("Creating database...");
-        await db.Database.EnsureCreatedAsync();
-        Log.Information("Database created.");
-
-        if (!await db.Users.AnyAsync(u => u.IsSuperAdmin))
-        {
-            Log.Information("Seeding data...");
-            await SeedData.SeedAsync(db);
-            Log.Information("Data seeded successfully.");
-            return Results.Ok(new { message = "Database created and seeded successfully" });
-        }
-        return Results.Ok(new { message = "Database already seeded" });
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "Seed failed");
-        return Results.BadRequest(new { message = ex.Message, innerException = ex.InnerException?.Message });
-    }
-});
-
 try
 {
     using (var scope = app.Services.CreateScope())
