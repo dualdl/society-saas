@@ -189,6 +189,14 @@ public class AuthService : IAuthService
     private async Task<LoginResponse> GenerateTokensAsync(User user)
     {
         var tenantId = _currentUser.TenantId;
+        if (tenantId == null || tenantId == Guid.Empty)
+        {
+            var userTenant = await _context.UserTenants
+                .Where(ut => ut.UserId == user.Id && ut.IsActive)
+                .Select(ut => (Guid?)ut.TenantId)
+                .FirstOrDefaultAsync();
+            tenantId = userTenant;
+        }
         var token = _jwtTokenService.GenerateToken(user, tenantId);
         var refreshToken = Guid.NewGuid().ToString();
 
