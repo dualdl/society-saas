@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using SocietySaaS.Application.Common.DTOs;
 using SocietySaaS.Application.Common.Interfaces;
@@ -93,8 +95,19 @@ public class AuthService : IAuthService
         if (user == null)
             return new LoginResponse { Success = false, Message = "Invalid credentials" };
 
-        if (string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (string.IsNullOrEmpty(user.PasswordHash))
             return new LoginResponse { Success = false, Message = "Invalid credentials" };
+
+        var isValid = VerifyPassword(request.Password, user.PasswordHash);
+        if (!isValid)
+            return new LoginResponse { Success = false, Message = "Invalid credentials" };
+
+        // Migrate SHA256 hash to BCrypt on successful login
+        if (!IsBcryptHash(user.PasswordHash))
+        {
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            await _context.SaveChangesAsync();
+        }
 
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -204,6 +217,23 @@ public class AuthService : IAuthService
                 TenantId = tenantId
             }
         };
+    }
+
+    private static bool IsBcryptHash(string hash)
+    {
+        return hash.StartsWith("$2a$") || hash.StartsWith("$2b$") || hash.StartsWith("$2y$");
+    }
+
+    private static bool VerifyPassword(string password, string hash)
+    {
+        if (IsBcryptHash(hash))
+            return BCrypt.Net.BCrypt.Verify(password, hash);
+
+        // Legacy SHA256 verification for backward compatibility
+        using var sha256 = SHA256.Create();
+        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "SocietySaaS_Salt_2024!"));
+        var computedHash = Convert.ToBase64String(bytes);
+        return computedHash == hash;
     }
 
 }
