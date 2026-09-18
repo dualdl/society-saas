@@ -31,12 +31,15 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
             {
                 if (entry.State == EntityState.Detached || entry.State == EntityState.Unchanged) continue;
 
+                var tenantId = _currentUser.TenantId;
+                if (tenantId == null || tenantId == Guid.Empty) continue;
+
                 var auditEntry = new AuditLog
                 {
                     EntityType = entry.Entity.GetType().Name,
                     EntityId = entry.Entity.Id,
                     UserId = _currentUser.UserId,
-                    TenantId = _currentUser.TenantId ?? Guid.Empty,
+                    TenantId = tenantId.Value,
                     Timestamp = DateTime.UtcNow,
                     IPAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
                     UserAgent = _httpContextAccessor.HttpContext?.Request?.Headers["User-Agent"].ToString(),
