@@ -48,7 +48,8 @@ const AdminUsers: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setUsers(data.users || data || []);
+      const usersData = data && data.success !== undefined && data.data !== undefined ? data.data : data;
+      setUsers(usersData.users || usersData || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load users');
     } finally {

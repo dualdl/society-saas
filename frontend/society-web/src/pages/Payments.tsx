@@ -27,7 +27,7 @@ const Payments: React.FC = () => {
     setLoading(true);
     try {
       const data = await paymentsApi.list(1, 50);
-      setPayments(data.payments || data || []);
+      setPayments(data.items || data.payments || data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {

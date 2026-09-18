@@ -18,14 +18,15 @@ const AdminLogin: React.FC = () => {
     setError('');
     try {
       const result = await authApi.login(email, password);
-      if (!result.isSuperAdmin) {
+      const user = result.user || result;
+      if (!user.isSuperAdmin) {
         setError('This account is not a Super Admin account');
         return;
       }
       localStorage.setItem('adminToken', result.token);
       localStorage.setItem('token', result.token);
       localStorage.setItem('isAdmin', 'true');
-      localStorage.setItem('user', JSON.stringify(result));
+      localStorage.setItem('user', JSON.stringify(user));
       navigate('/admin/dashboard');
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');

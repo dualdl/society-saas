@@ -46,7 +46,7 @@ const Charges: React.FC = () => {
     setLoading(true);
     try {
       const data = await chargesApi.list();
-      setCharges(data.charges || data || []);
+      setCharges(data.items || data.charges || data || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load charges');
     } finally {

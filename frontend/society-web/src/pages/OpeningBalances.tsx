@@ -40,7 +40,7 @@ const OpeningBalances: React.FC = () => {
     setLoading(true);
     try {
       const data = await openingBalanceApi.getAll();
-      setBalances(data.balances || data || []);
+      setBalances(data.items || data.balances || data || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load opening balances');
     } finally {

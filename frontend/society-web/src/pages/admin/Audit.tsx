@@ -52,7 +52,8 @@ const AdminAudit: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setLogs(data.logs || data || []);
+      const logsData = data && data.success !== undefined && data.data !== undefined ? data.data : data;
+      setLogs(logsData.logs || logsData || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load audit logs');
     } finally {

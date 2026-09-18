@@ -396,6 +396,11 @@ node_modules/
 frontend/society-web/build/
 frontend/society-web/dist/
 
+# Playwright
+frontend/society-web/tests/.auth/
+frontend/society-web/test-results/
+frontend/society-web/playwright-report/
+
 # React
 frontend/society-web/.env.local
 frontend/society-web/.env.development.local

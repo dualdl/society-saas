@@ -15,7 +15,11 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
-  return response.json();
+  const json = await response.json();
+  if (json && json.success !== undefined && json.data !== undefined) {
+    return json.data;
+  }
+  return json;
 }
 
 async function apiBlob(path: string): Promise<Blob> {
@@ -34,7 +38,7 @@ async function apiBlob(path: string): Promise<Blob> {
 
 export const authApi = {
   login: (email: string, password: string) =>
-    apiRequest<{ token: string; email: string; firstName: string; lastName: string; isSuperAdmin: boolean; tenantId: string | null; tenantName: string | null }>(
+    apiRequest<{ token: string; refreshToken: string; message: string; requiresOtp: boolean; user: { id: string; email: string; firstName: string; lastName: string; mobile: string | null; isSuperAdmin: boolean; tenantId: string | null; tenantName?: string | null } }>(
       '/api/v1/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
 
   register: (data: { email: string; password: string; firstName: string; lastName: string; mobile?: string }) =>
@@ -111,14 +115,15 @@ export const importApi = {
         const err = await res.json().catch(() => ({ message: 'Upload failed' }));
         throw new Error(err.message || `HTTP ${res.status}`);
       }
-      return res.json();
+      const json = await res.json();
+      return json && json.success !== undefined && json.data !== undefined ? json.data : json;
     });
   },
   getTemplate: () => apiBlob('/api/v1/imports/template'),
-  getJobs: () => apiRequest<any>('/api/v1/imports/jobs'),
-  getJob: (id: string) => apiRequest<any>(`/api/v1/imports/jobs/${id}`),
+  getJobs: () => apiRequest<any>('/api/v1/imports'),
+  getJob: (id: string) => apiRequest<any>(`/api/v1/imports/${id}`),
   confirm: (jobId: string) =>
-    apiRequest<any>(`/api/v1/imports/jobs/${jobId}/confirm`, { method: 'POST' }),
+    apiRequest<any>(`/api/v1/imports/${jobId}/confirm`, { method: 'POST' }),
 };
 
 export const auditApi = {
@@ -133,16 +138,16 @@ export const auditApi = {
 };
 
 export const openingBalanceApi = {
-  getAll: () => apiRequest<any>('/api/v1/opening-balances'),
-  getByFlat: (flatId: string) => apiRequest<any>(`/api/v1/opening-balances/${flatId}`),
+  getAll: () => apiRequest<any>('/api/v1/openingbalances'),
+  getByFlat: (flatId: string) => apiRequest<any>(`/api/v1/openingbalances/flat/${flatId}`),
   set: (balances: Array<{ flatId: string; balance: number }>) =>
-    apiRequest<any>('/api/v1/opening-balances', { method: 'POST', body: JSON.stringify({ balances }) }),
+    apiRequest<any>('/api/v1/openingbalances', { method: 'POST', body: JSON.stringify({ balances }) }),
 };
 
 export const lateFeeApi = {
-  get: () => apiRequest<any>('/api/v1/late-fee/config'),
+  get: () => apiRequest<any>('/api/v1/latepaymentrules'),
   save: (config: any) =>
-    apiRequest<any>('/api/v1/late-fee/config', { method: 'PUT', body: JSON.stringify(config) }),
+    apiRequest<any>('/api/v1/latepaymentrules', { method: 'POST', body: JSON.stringify(config) }),
 };
 
 export const reportApi = {
@@ -179,7 +184,8 @@ export const superAdminApi = {
         const err = await res.json().catch(() => ({ message: 'Import failed' }));
         throw new Error(err.message || `HTTP ${res.status}`);
       }
-      return res.json();
+      const json = await res.json();
+      return json && json.success !== undefined && json.data !== undefined ? json.data : json;
     });
   },
 };

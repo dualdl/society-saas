@@ -26,7 +26,7 @@ const Receipts: React.FC = () => {
     setLoading(true);
     try {
       const data = await receiptsApi.list(1, 50);
-      setReceipts(data.receipts || data || []);
+      setReceipts(data.items || data.receipts || data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {

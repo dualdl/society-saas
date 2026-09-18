@@ -43,7 +43,7 @@ const Members: React.FC = () => {
     setError('');
     try {
       const data = await membersApi.list(1, 50, search);
-      setMembers(data.members || data || []);
+      setMembers(data.items || data.members || data || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load members');
     } finally {

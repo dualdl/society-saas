@@ -46,7 +46,7 @@ const Flats: React.FC = () => {
     setError('');
     try {
       const data = await flatsApi.list(page, 50, search);
-      setFlats(data.flats || data || []);
+      setFlats(data.items || data.flats || data || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load flats');
     } finally {

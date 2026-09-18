@@ -46,7 +46,7 @@ const Audit: React.FC = () => {
     setError('');
     try {
       const data = await auditApi.getLogs({ entityType, userId, dateFrom, dateTo });
-      setLogs(data.logs || data || []);
+      setLogs(data.items || data.logs || data || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load audit logs');
     } finally {

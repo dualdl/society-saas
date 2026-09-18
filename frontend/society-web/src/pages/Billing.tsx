@@ -32,7 +32,7 @@ const Billing: React.FC = () => {
     setLoading(true);
     try {
       const data = await billsApi.list(1, 20);
-      setBills(data.bills || data || []);
+      setBills(data.items || data.bills || data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -33,7 +33,7 @@ const SocietyLanding: React.FC = () => {
         const res = await fetch(`${API_BASE}/api/v1/tenants?slug=${slug}`);
         if (res.ok) {
           const data = await res.json();
-          setSociety(data);
+          setSociety(data && data.success !== undefined && data.data !== undefined ? data.data : data);
         } else {
           setError('Society not found');
         }

@@ -18,11 +18,11 @@ const SocietyLogin: React.FC = () => {
     setError('');
     try {
       const result = await authApi.login(email, password);
+      const user = result.user || result;
       localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result));
-      if (result.tenantId) {
-        localStorage.setItem('tenantId', result.tenantId);
-        localStorage.setItem('tenantName', result.tenantName || '');
+      localStorage.setItem('user', JSON.stringify(user));
+      if (user.tenantId) {
+        localStorage.setItem('tenantId', user.tenantId);
       }
       navigate('/app');
     } catch (err: any) {
